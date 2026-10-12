@@ -1,1 +1,1 @@
-{"$schema": "https://openapi.vercel.sh/vercel.json", "installCommand": "bun install", "buildCommand": "npm run build", "engines": {"node": ">=22"}}
+{"$schema": "https://openapi.vercel.sh/vercel.json", "installCommand": "bun install", "buildCommand": "npm run build"}
