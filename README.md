@@ -23,20 +23,22 @@ npm run dev
 
 ## Deploy to Vercel
 
-No Vercel-specific config is needed — Nitro detects Vercel automatically at build time.
+The repo ships with everything Vercel needs (`vercel.json`, `.nvmrc`, and a
+build that detects Vercel automatically):
 
 1. Push this repository to GitHub (or use the GitHub sync from Lovable).
 2. In Vercel, click **Add New → Project** and import the repository.
-3. Vercel auto-detects Vite. Set **Node.js Version** to **22.x** in Project Settings (or leave the default if it is 22).
-4. Click **Deploy**.
+3. Click **Deploy** — no manual settings needed.
 
-Build settings (defaults usually work):
+What's preconfigured:
 
-- **Build command:** `npm run build`
-- **Output directory:** leave empty — Vercel reads the generated `.vercel/output/` Build Output
-- **Install command:** auto-detected (uses `bun.lock`, so Vercel runs Bun)
+- **Build command:** `npm run build` (set in `vercel.json`)
+- **Install command:** `bun install` (set in `vercel.json`; Vercel also detects `bun.lock` on its own)
+- **Node.js version:** 22 (pinned via `.nvmrc` and `"engines"` in `package.json`)
+- **Server target:** `vite.config.ts` switches the Nitro preset to `vercel` when building on Vercel, emitting the Vercel Build Output API (`.vercel/output/`) with a Node 22 server function and cached static assets
+- Elsewhere (Lovable hosting, local), the default Cloudflare target applies — no change needed
 
-The build runs outside the Lovable sandbox, so the app builds for Vercel's server runtime instead of Cloudflare — that switch is automatic.
+To override the preset manually, set `SERVER_PRESET` in Vercel's environment variables.
 
 ## Environment variables
 
