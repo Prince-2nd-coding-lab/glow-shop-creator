@@ -1,24 +1,55 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
+import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ArrowRight, ArrowUpRight, ShoppingBag, Search, Plus, Minus, X, Menu, Leaf, ShieldCheck, MessageCircle, Sparkles, Instagram, Phone, MapPin, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import hero from '@/assets/isaro-hero.jpg';
+import { products, type Product, formatPrice, whatsappUrl, bagTotal } from '@/lib/catalog';
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
+export const Route = createFileRoute('/')({
+ head:()=>({meta:[{title:'Isaro Skin & Esthetics | Your everyday glow, in Rwanda'},{name:'description',content:'Discover skincare favourites from Beauty of Joseon, Anua, Vaseline and more at Isaro Skin And Esthetics. Shop in RWF and order directly on WhatsApp.'},{property:'og:title',content:'Isaro Skin & Esthetics | Care for your natural glow'},{property:'og:description',content:'Thoughtfully chosen skincare and quality cosmetics in Rwanda. Explore our collection and connect with Isaro.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),
+ component:Index,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+const categories=['All essentials','Sun protection','Serums','Moisturizers','Lip care'];
+function Index(){
+ const [category,setCategory]=useState('All essentials');
+ const [query,setQuery]=useState('');
+ const [bag,setBag]=useState<Record<string,number>>({});
+ const [bagOpen,setBagOpen]=useState(false);
+ const [detail,setDetail]=useState<Product|null>(null);
+ const [menuOpen,setMenuOpen]=useState(false);
+ const [expanded,setExpanded]=useState(false);
+ const [added,setAdded]=useState<string|null>(null);
+ const count=Object.values(bag).reduce((a,b)=>a+b,0);
+ const filtered=products.filter(p=>(category==='All essentials'||p.category===category)&&`${p.name} ${p.brand}`.toLowerCase().includes(query.toLowerCase()));
+ const visible=(expanded||category!=='All essentials'||query)?filtered:filtered.slice(0,4);
+ const add=(p:Product)=>{if(p.price===null){window.open(whatsappUrl(`Hello Isaro! I would like the price and availability of ${p.name}.`),'_blank','noopener,noreferrer');return;} setBag(prev=>({...prev,[p.id]:(prev[p.id]??0)+1}));setAdded(p.id);window.setTimeout(()=>setAdded(null),1500);};
+ const change=(id:string,amount:number)=>setBag(prev=>({...prev,[id]:Math.max(0,(prev[id]??0)+amount)}));
+ const viewAll=()=>{setExpanded(true);setCategory('All essentials');setQuery('');};
+ const order=whatsappUrl(`Hello Isaro! I would like to order:\n${products.filter(p=>(bag[p.id]??0)>0).map(p=>`${bag[p.id]} × ${p.name} — ${formatPrice((p.price??0)*(bag[p.id]??0))}`).join('\n')}\nProduct total: ${formatPrice(bagTotal(bag))}\nPlease confirm availability and delivery details. Thank you!`);
+ return <>
+  <div className="announcement"><Sparkles size={12}/> A little care. A little confidence. A beautiful you. <Sparkles size={12}/></div>
+  <header className="header container-wide">
+   <a href="#" className="wordmark" aria-label="Isaro home">ISARO<small>SKIN & ESTHETICS</small></a>
+   <nav className="navlinks" aria-label="Main navigation"><a href="#collection">Shop skincare</a><a href="#collection" onClick={viewAll}>Our collection</a><a href="#story">The Isaro story</a><a href="#contact">Get in touch</a></nav>
+   <div className="header-actions"><Button className="consult text-[11px] font-normal" variant="ghost" asChild><a href={whatsappUrl('Hello Isaro! I would love some help choosing skincare.')} target="_blank" rel="noreferrer">Let’s talk skin <ArrowUpRight size={14}/></a></Button><Button variant="ghost" size="icon" aria-label={`Open shopping bag, ${count} items`} onClick={()=>setBagOpen(true)} className="relative"><ShoppingBag size={19}/>{count>0&&<span className="absolute -right-0.5 -top-0.5 size-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center">{count}</span>}</Button><Button className="mobile-nav" variant="ghost" size="icon" aria-label="Open navigation" onClick={()=>setMenuOpen(true)}><Menu/></Button></div>
+  </header>
+  <main>
+   <section className="hero"><img src={hero} width={1536} height={1024} alt="Woman with radiant skin in the Isaro beauty campaign"/><div className="container-wide hero-inner"><div className="eyebrow">A little luxury. Everyday.</div><h1>Skincare that<br/>feels like <em>you.</em></h1><p>Meet your next skincare favourites.<br/>Thoughtfully chosen essentials for healthy skin<br className="hidden sm:block"/> and a glow that’s naturally yours.</p><div className="hero-actions"><Button variant="beauty" asChild><a href="#collection">Find your glow <ArrowRight/></a></Button><Button variant="link" className="text-[11px] font-normal p-0" asChild><a href="#story">Discover Isaro <ArrowUpRight/></a></Button></div><div className="hero-note"><Leaf size={14}/> Quality skincare. Real care. Right here in Rwanda.</div></div><span className="hero-caption">YOUR SKIN. YOUR KIND OF BEAUTIFUL.</span></section>
+   <div className="promise-strip container-wide"><div className="promise"><ShieldCheck/><span>Quality cosmetics, carefully chosen</span></div><div className="promise"><Sparkles/><span>Everyday essentials. Exceptional care.</span></div><div className="promise"><MessageCircle/><span>A personal touch, on WhatsApp</span></div></div>
+   <section className="collection container-wide" id="collection"><div className="section-heading"><div><div className="eyebrow">Your daily ritual, reimagined</div><h2>Good skin starts here.</h2><p>A few favourites. A world of care.</p></div><Button variant="link" className="view-all text-[11px] font-normal" onClick={viewAll}>Explore the collection <ArrowRight/></Button></div>
+    <div className="collection-tools"><div className="filters">{categories.map(c=><Button key={c} size="sm" variant={c===category?'selected':'category'} onClick={()=>setCategory(c)}>{c}</Button>)}</div><label className="search-field"><Search size={15} className="text-muted-foreground"/><input aria-label="Search skincare" placeholder="Find your favourite…" value={query} onChange={e=>setQuery(e.target.value)}/></label></div>
+    <div className="products-grid">{visible.map(p=><article key={p.id}><div className="product-photo"><Button variant="ghost" className="product-link h-full p-0 hover:bg-transparent" aria-label={`View ${p.name}`} onClick={()=>setDetail(p)}><img src={p.image} alt={p.name} width={600} height={600} loading="lazy"/></Button><span className={`product-label ${p.oldPrice?'sale':''}`}>{p.tag}</span><Button variant="product" size="icon" className="product-add" aria-label={p.price===null?`Ask about ${p.name}`:`Add ${p.name} to bag`} onClick={()=>add(p)} title={p.price===null?'Ask for price':'Add to bag'}>{added===p.id?<Check size={16}/>:<Plus size={16}/>}</Button></div><div className="product-info"><span className="product-brand">{p.brand}</span><h3>{p.name}</h3><p>{p.category}</p><div className="product-price">{p.price!==null?<><span>{formatPrice(p.price)}</span>{p.oldPrice&&<del>{formatPrice(p.oldPrice)}</del>}</>:<a className="text-primary underline underline-offset-4" href={whatsappUrl(`Hello Isaro! What is the price of ${p.name}?`)} target="_blank" rel="noreferrer">Ask for price <ArrowUpRight size={11} className="inline"/></a>}</div></div></article>)}</div>
+    {visible.length===0&&<div className="empty-state">No essentials found. Try another name or category.</div>}
+    {!expanded&&category==='All essentials'&&!query&&<div className="text-center mt-9"><Button variant="outline" className="rounded-none text-[11px] font-normal px-7" onClick={viewAll}>View all essentials <ArrowRight/></Button></div>}
+   </section>
+   <section className="story" id="story"><div className="story-photo"><img src={hero} width={1536} height={1024} loading="lazy" alt="A celebration of natural beauty"/></div><div className="story-content"><div className="eyebrow">The heart of Isaro</div><h2>More than skincare.<br/>A little self-love.</h2><p>At Isaro Skin & Esthetics, we believe caring for your skin is a beautiful way to care for yourself. We bring together quality cosmetics and everyday skincare favourites, with a personal touch.</p><p>From your first serum to your daily sunscreen, we’re here to help you find a routine that feels right for you.</p><Button variant="link" className="p-0 text-xs font-normal" asChild><a href={whatsappUrl('Hello Isaro! Can you help me find a skincare routine?')} target="_blank" rel="noreferrer">Let’s find your favourites <ArrowUpRight/></a></Button><div className="story-signature">With love, Isaro.</div></div></section>
+   <section className="brand-band container-wide" aria-label="Featured skincare brands"><p>FAMILIAR FAVOURITES. THOUGHTFULLY SELECTED.</p><div className="brand-names"><span>ANUA</span><span>Beauty of Joseon</span><span>CeraVe</span><span>LA ROCHE-POSAY</span><span className="font-display italic">Vaseline</span></div></section>
+   <section className="contact-band container-wide" id="contact"><div><div className="eyebrow">Your skin journey starts with a hello</div><h2>A little guidance. A lot of care.</h2><p>Need help choosing? Let’s talk about your skin and find your next favourite.</p></div><Button variant="beauty" asChild><a href={whatsappUrl('Hello Isaro! I would like to know more about your skincare products.')} target="_blank" rel="noreferrer"><MessageCircle/> Chat with us on WhatsApp <ArrowUpRight/></a></Button></section>
+  </main>
+  <footer className="footer"><div className="container-wide"><div className="footer-top"><div><a href="#" className="wordmark">ISARO<small>SKIN & ESTHETICS</small></a><p>Quality cosmetics. Beautiful everyday rituals.</p></div><div><p>LET’S STAY CONNECTED</p><div className="footer-links"><a href="https://www.instagram.com/isaroskincare/" target="_blank" rel="noreferrer" className="flex gap-2 items-center"><Instagram size={15}/> @isaroskincare</a><a href="tel:+250788964441" className="flex gap-2 items-center"><Phone size={14}/> +250 788 964 441</a><span className="flex gap-2 items-center text-[11px]"><MapPin size={14}/> Rwanda</span></div></div></div><div className="footer-bottom"><span>© 2026 Isaro Skin And Esthetics Ltd. All rights reserved.</span><span>Made for your kind of beautiful.</span></div></div></footer>
+  <Dialog.Root open={bagOpen} onOpenChange={setBagOpen}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-panel" aria-describedby={undefined}><Dialog.Title>Your skincare bag <span className="text-lg font-sans">({count})</span></Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" className="dialog-close" aria-label="Close shopping bag"><X/></Button></Dialog.Close>{count===0?<div className="empty-state"><ShoppingBag className="mx-auto mb-4" size={30}/><p>Your next favourite is waiting.</p><Button variant="beauty" className="mt-4" onClick={()=>setBagOpen(false)}>Keep exploring <ArrowRight/></Button></div>:<>{products.filter(p=>(bag[p.id]??0)>0).map(p=><div className="bag-row" key={p.id}><img src={p.image} alt={p.name}/><div><h3>{p.name}</h3><p>{formatPrice(p.price??0)}</p></div><div className="bag-qty"><Button variant="ghost" size="icon" aria-label={`Remove one ${p.name}`} onClick={()=>change(p.id,-1)}><Minus size={12}/></Button><span className="text-xs">{bag[p.id]}</span><Button variant="ghost" size="icon" aria-label={`Add one ${p.name}`} onClick={()=>change(p.id,1)}><Plus size={12}/></Button></div></div>)}<div className="bag-total"><span>Product total</span><strong>{formatPrice(bagTotal(bag))}</strong></div><p className="text-xs text-muted-foreground mb-5 leading-relaxed">Availability and delivery details will be confirmed by Isaro.</p><Button variant="beauty" className="w-full" asChild><a href={order} target="_blank" rel="noreferrer"><MessageCircle/> Order on WhatsApp <ArrowUpRight/></a></Button></>}</Dialog.Content></Dialog.Portal></Dialog.Root>
+  <Dialog.Root open={detail!==null} onOpenChange={open=>{if(!open)setDetail(null);}}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-panel" aria-describedby="product-description"><Dialog.Close asChild><Button variant="ghost" size="icon" className="dialog-close" aria-label="Close product details"><X/></Button></Dialog.Close>{detail&&<><span className="product-brand">{detail.brand}</span><Dialog.Title className="mt-3">{detail.name}</Dialog.Title><div className="detail-layout"><img src={detail.image} alt={detail.name}/><div><p id="product-description">{detail.description}</p><div className="product-price mb-5">{detail.price!==null?formatPrice(detail.price):'Contact us for pricing'}{detail.oldPrice&&<del>{formatPrice(detail.oldPrice)}</del>}</div><Button variant="beauty" onClick={()=>{add(detail);if(detail.price!==null){setDetail(null);setBagOpen(true);}}}>{detail.price!==null?'Add to bag':'Ask on WhatsApp'} {detail.price!==null?<Plus/>:<ArrowUpRight/>}</Button></div></div></>}</Dialog.Content></Dialog.Portal></Dialog.Root>
+  <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-panel" aria-describedby={undefined}><Dialog.Title>Explore Isaro</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" className="dialog-close" aria-label="Close navigation"><X/></Button></Dialog.Close><nav className="flex flex-col gap-6 text-sm">{[['Shop skincare','#collection'],['Our collection','#collection'],['The Isaro story','#story'],['Get in touch','#contact']].map(([label,href])=><a key={label} href={href} onClick={()=>{setMenuOpen(false);if(label==='Our collection')viewAll();}}>{label} <ArrowUpRight size={14} className="inline ml-2"/></a>)}</nav></Dialog.Content></Dialog.Portal></Dialog.Root>
+ </>;
 }
