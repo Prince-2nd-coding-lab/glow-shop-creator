@@ -10,8 +10,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // build emits the Vercel Build Output API (.vercel/output) with a Node 22
 // server function. SERVER_PRESET still wins if set explicitly. Everywhere else
 // (Lovable hosting, local) the cloudflare-module default applies.
-const nitro = process.env.VERCEL
-  ? { preset: process.env.SERVER_PRESET || "vercel" }
+const nitro = process.env["VERCEL"]
+  ? { preset: process.env["SERVER_PRESET"] || "vercel" }
   : {};
 
 export default defineConfig({
